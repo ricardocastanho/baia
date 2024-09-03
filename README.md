@@ -27,7 +27,7 @@ Welcome to the Real Estate Search Platform, a Go-based project designed to simpl
 
 ### Prerequisites
 
-- Go 1.19+ installed on your machine.
+- Go 1.23+ installed on your machine.
 - Docker (for running the Neo4j database).
 - [Neo4j](https://neo4j.com/download/) installed and running.
 
@@ -35,19 +35,19 @@ Welcome to the Real Estate Search Platform, a Go-based project designed to simpl
 
 1. Clone the repository:
 
-    ```sh
-    git clone https://github.com/yourusername/real-estate-search-platform.git
-    cd real-estate-search-platform
-    ```
+   ```sh
+   git clone https://github.com/gauchitos/baia.git
+   cd baia
+   ```
 
 2. Install Go dependencies:
 
-    ```sh
-    go mod tidy
-    ```
+   ```sh
+   go mod tidy
+   ```
 
 3. Run the application:
 
-    ```sh
-    go run main.go
-    ```
+   ```sh
+   go run main.go
+   ```
