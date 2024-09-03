@@ -3,46 +3,40 @@ package main
 import (
 	"fmt"
 	"sync"
+	"time"
 
-	"github.com/gocolly/colly/v2"
+	"baia/internal/scraper"
+	"baia/internal/utils"
 )
 
-func getRealStateUrls(ch chan string, wg *sync.WaitGroup, url string) {
-	c := colly.NewCollector()
+// runScraper runs a given scraper function with a specific URL and prints scraped URLs.
+func runScraper(wg *sync.WaitGroup, scraperFunc func(chan string)) {
+	defer wg.Done()
 
-	c.OnHTML("div#grid div.listing-item a[href]", func(e *colly.HTMLElement) {
-		ch <- e.Attr("href")
-	})
+	ch := make(chan string)
 
-	c.OnScraped(func(r *colly.Response) {
-		wg.Done()
-	})
+	go scraperFunc(ch)
 
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
-	})
-
-	c.Visit(url)
+	for link := range ch {
+		fmt.Println("Scraped URL:", link)
+	}
 }
 
 func main() {
-	numGoroutines := 1
-
-	ch := make(chan string)
-	defer close(ch)
+	ctx, cancel := utils.NewTimeoutContext(10 * time.Second)
+	defer cancel()
 
 	var wg sync.WaitGroup
+	wg.Add(1)
 
-	wg.Add(numGoroutines)
-
-	go getRealStateUrls(ch, &wg, "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/")
-
-	for link := range ch {
-		fmt.Println(link)
+	perfilScraperFunc := func(ch chan string) {
+		perfilScraper := scraper.NewPerfilScraper(ch)
+		perfilScraper.Run(ctx, "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/")
 	}
 
-	go func() {
-		wg.Wait()
-		close(ch)
-	}()
+	go runScraper(&wg, perfilScraperFunc)
+
+	wg.Wait()
+
+	fmt.Println("Scraping completed.")
 }
