@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"baia/internal/scraper"
+	"baia/internal/scraper/perfil"
 	"baia/internal/utils"
 )
 
@@ -26,8 +26,8 @@ func main() {
 	wg.Add(1)
 
 	perfilScraperFunc := func() ([]string, []string) {
-		perfilScraper := scraper.NewPerfilScraper()
-		return perfilScraper.Run(ctx, "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/")
+		perfilScraper := perfil.NewPerfilScraper()
+		return perfilScraper.GetRealStates(ctx, "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/")
 	}
 
 	go runScraper(&wg, perfilScraperFunc)
