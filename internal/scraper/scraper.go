@@ -5,9 +5,5 @@ import (
 )
 
 type RealEstateScraper interface {
-	Run(ctx context.Context, url string)
-}
-
-type GetRealEstateScraper interface {
-	Run(ctx context.Context, urls []string)
+	Run(ctx context.Context, url string) ([]string, []string)
 }

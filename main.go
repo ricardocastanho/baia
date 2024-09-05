@@ -3,35 +3,31 @@ package main
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"baia/internal/scraper"
 	"baia/internal/utils"
 )
 
 // runScraper runs a given scraper function with a specific URL and prints scraped URLs.
-func runScraper(wg *sync.WaitGroup, scraperFunc func(chan string)) {
+func runScraper(wg *sync.WaitGroup, scraperFunc func() ([]string, []string)) {
 	defer wg.Done()
 
-	ch := make(chan string)
+	realStateUrls, nextPages := scraperFunc()
 
-	go scraperFunc(ch)
-
-	for link := range ch {
-		fmt.Println("Scraped URL:", link)
-	}
+	fmt.Println("Urls:", realStateUrls)
+	fmt.Println("next pages:", nextPages)
 }
 
 func main() {
-	ctx, cancel := utils.NewTimeoutContext(10 * time.Second)
+	ctx, cancel := utils.NewCancelableContext()
 	defer cancel()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	perfilScraperFunc := func(ch chan string) {
-		perfilScraper := scraper.NewPerfilScraper(ch)
-		perfilScraper.Run(ctx, "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/")
+	perfilScraperFunc := func() ([]string, []string) {
+		perfilScraper := scraper.NewPerfilScraper()
+		return perfilScraper.Run(ctx, "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/")
 	}
 
 	go runScraper(&wg, perfilScraperFunc)
