@@ -1,7 +1,7 @@
 package perfil
 
 import (
-	"baia/internal/utils"
+	"baia/internal/contracts"
 	"baia/pkg/collector"
 	"context"
 	"fmt"
@@ -13,7 +13,7 @@ import (
 type PerfilScraper struct{}
 
 // NewPerfilScraper creates a new instance of PerfilScraper.
-func NewPerfilScraper() utils.RealEstateScraper {
+func NewPerfilScraper() contracts.RealEstateScraper {
 	return &PerfilScraper{}
 }
 
