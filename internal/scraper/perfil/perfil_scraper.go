@@ -17,7 +17,7 @@ func NewPerfilScraper() contracts.RealEstateScraper {
 	return &PerfilScraper{}
 }
 
-// Run starts the scraping process for the given URL using the provided context.
+// GetRealStates starts the scraping process for the given URL using the provided context.
 func (p *PerfilScraper) GetRealStates(ctx context.Context, url string) ([]string, []string) {
 	var (
 		realStateurls = []string{}
@@ -45,4 +45,9 @@ func (p *PerfilScraper) GetRealStates(ctx context.Context, url string) ([]string
 
 		return realStateurls, nextPages
 	}
+}
+
+// GetRealStateData gets all the data from a given url
+func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.RealState, url string) {
+	ch <- contracts.RealState{Url: "acac"}
 }
