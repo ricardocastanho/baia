@@ -97,7 +97,7 @@ func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector
 
 			span.Remove()
 
-			p.realState.Name = strings.TrimSpace(h2.Text())
+			p.realState.SetName(h2.Text())
 		}
 	})
 }
