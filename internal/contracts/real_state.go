@@ -7,23 +7,23 @@ import (
 )
 
 type RealEstate struct {
-	ID              string
-	Code            string
-	Name            string
-	Description     string
-	Url             string
-	Price           int
-	Bedrooms        int
-	Bathrooms       int
-	Area            int
-	GarageSpaces    int
-	Type            string
-	Neighborhood    string
-	Furnished       bool
-	YearBuilt       int
-	Characteristics []string
-	ForSale         bool
-	ForRent         bool
+	ID           string
+	Code         string
+	Name         string
+	Description  string
+	Url          string
+	Price        int
+	Bedrooms     int
+	Bathrooms    int
+	Area         int
+	GarageSpaces int
+	Type         string
+	Neighborhood string
+	Furnished    bool
+	YearBuilt    int
+	Tags         []string
+	ForSale      bool
+	ForRent      bool
 }
 
 func (r *RealEstate) SetCode(text string) error {
