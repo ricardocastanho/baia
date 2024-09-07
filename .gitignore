@@ -32,7 +32,6 @@ vendor/
 *.swp
 *.swo
 *.idea/
-/.vscode/
 /*.iml
 .DS_Store
 
