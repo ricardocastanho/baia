@@ -10,11 +10,15 @@ import (
 )
 
 // PerfilScraper implements the RealEstateScraperInterface for the "Perfil" real estate website.
-type PerfilScraper struct{}
+type PerfilScraper struct {
+	realState contracts.RealState
+}
 
 // NewPerfilScraper creates a new instance of PerfilScraper.
 func NewPerfilScraper() contracts.RealEstateScraper {
-	return &PerfilScraper{}
+	return &PerfilScraper{
+		realState: contracts.RealState{},
+	}
 }
 
 // GetRealStates starts the scraping process for the given URL using the provided context.
@@ -49,11 +53,24 @@ func (p *PerfilScraper) GetRealStates(ctx context.Context, url string) ([]string
 
 // GetRealStateData gets all the data from a given url
 func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.RealState, url string) {
-	realState := contracts.RealState{}
-	realState.Url = url
+	p.realState.Url = url
 
 	c := collector.NewCollector()
 
+	p.SetRealStateCode(ctx, c)
+	p.SetRealStateName(ctx, c)
+	p.SetRealStatePrice(ctx, c)
+
+	select {
+	case <-ctx.Done():
+		fmt.Println("Stopping visit due to context cancellation:", ctx.Err())
+	default:
+		c.Visit(url)
+		ch <- p.realState
+	}
+}
+
+func (p *PerfilScraper) SetRealStateCode(ctx context.Context, c *colly.Collector) {
 	c.OnHTML("div.property-title", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -63,21 +80,31 @@ func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.
 			h2 := e.DOM.Find("h2")
 			span := h2.Find("span")
 
-			realState.Cod = span.Text()
-
-			span.Remove()
-
-			realState.Name = h2.Text()
+			p.realState.SetCode(span.Text())
 		}
 	})
+}
 
+func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector) {
+	c.OnHTML("div.property-title span", func(e *colly.HTMLElement) {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
+			return
+		default:
+			p.realState.Name = e.Text
+		}
+	})
+}
+
+func (p *PerfilScraper) SetRealStatePrice(ctx context.Context, c *colly.Collector) {
 	c.OnHTML("div.valor-imovel span", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
 			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
 			return
 		default:
-			err := realState.SetPrice(e.Text)
+			err := p.realState.SetPrice(e.Text)
 
 			if err != nil {
 				fmt.Println("Error while trying to parse real state price:", err)
@@ -85,12 +112,4 @@ func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.
 			}
 		}
 	})
-
-	select {
-	case <-ctx.Done():
-		fmt.Println("Stopping visit due to context cancellation:", ctx.Err())
-	default:
-		c.Visit(url)
-		ch <- realState
-	}
 }

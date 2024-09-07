@@ -8,7 +8,7 @@ import (
 
 type RealState struct {
 	ID              string
-	Cod             string
+	Code            string
 	Name            string
 	Description     string
 	Url             string
@@ -26,12 +26,24 @@ type RealState struct {
 	ForRent         bool
 }
 
+func (r *RealState) SetCode(text string) error {
+	if !strings.Contains(text, "Cód. V") {
+		return errors.New("invalid format: keywork 'Cód. V' is missing")
+	}
+
+	code := strings.TrimSpace(strings.Replace(text, "Cód. V", "", 1))
+
+	r.Code = code
+
+	return nil
+}
+
 func (r *RealState) SetPrice(text string) error {
 	if !strings.Contains(text, "R$") {
 		return errors.New("invalid format: keywork 'R$' is missing")
 	}
 
-	priceText := strings.TrimSpace(strings.Replace(text, "R$", "", 1))
+	priceText := strings.TrimSpace(strings.Split(text, "R$")[1])
 	priceText = strings.ReplaceAll(priceText, ".", "")
 	priceText = strings.Replace(priceText, ",", ".", 1)
 

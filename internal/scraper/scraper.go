@@ -41,7 +41,7 @@ func (s *Scraper) getRealStateData(ctx context.Context) {
 			return
 		default:
 			for data := range s.ch {
-				fmt.Println("Real State data:", data)
+				fmt.Println("Real State data:", data.Code, "-", data.Price)
 			}
 		}
 	}
