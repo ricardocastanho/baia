@@ -2,7 +2,6 @@ package perfil
 
 import (
 	"baia/internal/contracts"
-	"baia/internal/utils"
 	"baia/pkg/collector"
 	"context"
 	"fmt"
@@ -78,14 +77,12 @@ func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.
 			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
 			return
 		default:
-			price, err := utils.ParsePriceToInt(e.Text)
+			err := realState.SetPrice(e.Text)
 
 			if err != nil {
 				fmt.Println("Error while trying to parse real state price:", err)
 				return
 			}
-
-			realState.Price = price
 		}
 	})
 
