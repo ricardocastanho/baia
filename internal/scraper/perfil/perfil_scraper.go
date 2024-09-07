@@ -5,6 +5,7 @@ import (
 	"baia/pkg/collector"
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gocolly/colly/v2"
 )
@@ -71,6 +72,18 @@ func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.
 }
 
 func (p *PerfilScraper) SetRealStateCode(ctx context.Context, c *colly.Collector) {
+	c.OnHTML("div.property-title h2 span.imovel-codigo", func(e *colly.HTMLElement) {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
+			return
+		default:
+			p.realState.SetCode(e.Text)
+		}
+	})
+}
+
+func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector) {
 	c.OnHTML("div.property-title", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -80,19 +93,9 @@ func (p *PerfilScraper) SetRealStateCode(ctx context.Context, c *colly.Collector
 			h2 := e.DOM.Find("h2")
 			span := h2.Find("span")
 
-			p.realState.SetCode(span.Text())
-		}
-	})
-}
+			span.Remove()
 
-func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector) {
-	c.OnHTML("div.property-title span", func(e *colly.HTMLElement) {
-		select {
-		case <-ctx.Done():
-			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
-			return
-		default:
-			p.realState.Name = e.Text
+			p.realState.Name = strings.TrimSpace(h2.Text())
 		}
 	})
 }
