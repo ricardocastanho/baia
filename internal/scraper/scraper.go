@@ -9,6 +9,9 @@ import (
 
 type Scraper struct {
 	scrapers []map[contracts.RealEstateScraper]string
+	jobs     chan ScraperJob
+	ch       chan contracts.RealState
+	wg       sync.WaitGroup
 }
 
 type ScraperJob struct {
@@ -19,20 +22,17 @@ type ScraperJob struct {
 func NewScraper(s []map[contracts.RealEstateScraper]string) *Scraper {
 	return &Scraper{
 		scrapers: s,
+		jobs:     make(chan ScraperJob),
+		ch:       make(chan contracts.RealState),
 	}
 }
 
-func (s *Scraper) getRealStateData(ctx context.Context, jobs <-chan ScraperJob) {
-	ch := make(chan contracts.RealState)
-	var wg sync.WaitGroup
-
-	for job := range jobs {
-		wg.Add(len(job.urls))
-
+func (s *Scraper) getRealStateData(ctx context.Context) {
+	for job := range s.jobs {
 		for _, url := range job.urls {
 			go func(url string) {
-				defer wg.Done()
-				job.scraper.GetRealStateData(ctx, ch, url)
+				defer s.wg.Done()
+				job.scraper.GetRealStateData(ctx, s.ch, url)
 			}(url)
 		}
 
@@ -40,28 +40,27 @@ func (s *Scraper) getRealStateData(ctx context.Context, jobs <-chan ScraperJob) 
 		case <-ctx.Done():
 			return
 		default:
-			for data := range ch {
+			for data := range s.ch {
 				fmt.Println("Real State data:", data)
 			}
 		}
 	}
 
 	go func() {
-		wg.Wait()
-		close(ch)
+		s.wg.Wait()
+		close(s.ch)
 	}()
 }
 
-func (s *Scraper) runScraper(ctx context.Context, wg *sync.WaitGroup, scraperMap map[contracts.RealEstateScraper]string, jobs chan<- ScraperJob) {
-	defer wg.Done()
+func (s *Scraper) runScraper(ctx context.Context, scraperMap map[contracts.RealEstateScraper]string) {
+	defer s.wg.Done()
 
 	for scraper := range scraperMap {
-		realStateUrls, nextPages := scraper.GetRealStates(ctx, scraperMap[scraper])
+		realStateUrls, _ := scraper.GetRealStates(ctx, scraperMap[scraper])
 
-		fmt.Println("Urls:", realStateUrls)
-		fmt.Println("Next pages:", nextPages)
+		s.wg.Add(len(realStateUrls))
 
-		jobs <- ScraperJob{
+		s.jobs <- ScraperJob{
 			scraper: scraper,
 			urls:    realStateUrls,
 		}
@@ -69,20 +68,16 @@ func (s *Scraper) runScraper(ctx context.Context, wg *sync.WaitGroup, scraperMap
 }
 
 func (s *Scraper) Run(ctx context.Context) {
-	var wg sync.WaitGroup
+	s.wg.Add(len(s.scrapers))
 
-	jobs := make(chan ScraperJob)
-
-	go s.getRealStateData(ctx, jobs)
-
-	wg.Add(len(s.scrapers))
+	go s.getRealStateData(ctx)
 
 	for i := range s.scrapers {
 		scraperMap := s.scrapers[i]
-		go s.runScraper(ctx, &wg, scraperMap, jobs)
+		go s.runScraper(ctx, scraperMap)
 	}
 
-	wg.Wait()
+	s.wg.Wait()
 
-	close(jobs)
+	close(s.jobs)
 }
