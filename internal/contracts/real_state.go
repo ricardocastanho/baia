@@ -21,6 +21,7 @@ type RealEstate struct {
 	Neighborhood string
 	Furnished    bool
 	YearBuilt    int
+	Photos       []string
 	Tags         []string
 	ForSale      bool
 	ForRent      bool
