@@ -67,10 +67,10 @@ func (r *RealState) SetPrice(text string) error {
 	return nil
 }
 
-func (r *RealState) SetBedrooms(text string) error {
+func (r *RealState) SetBathrooms(text string) error {
 	bedRoomsFloat, err := strconv.ParseFloat(text, 64)
 	if err != nil {
-		return errors.New("error while converting the bedroom field: " + err.Error())
+		return errors.New("error while converting the bathroom field: " + err.Error())
 	}
 
 	r.Bedrooms = int(bedRoomsFloat)

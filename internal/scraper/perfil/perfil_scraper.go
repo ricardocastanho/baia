@@ -61,7 +61,7 @@ func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.
 	p.SetRealStateName(ctx, c)
 	p.SetRealStateDescription(ctx, c)
 	p.SetRealStatePrice(ctx, c)
-	p.SetRealStateBedrooms(ctx, c)
+	p.SetRealStateBathrooms(ctx, c)
 
 	select {
 	case <-ctx.Done():
@@ -130,14 +130,14 @@ func (p *PerfilScraper) SetRealStatePrice(ctx context.Context, c *colly.Collecto
 	})
 }
 
-func (p *PerfilScraper) SetRealStateBedrooms(ctx context.Context, c *colly.Collector) {
+func (p *PerfilScraper) SetRealStateBathrooms(ctx context.Context, c *colly.Collector) {
 	c.OnHTML("#conteudo div.container div div.col-lg-8.col-md-7 div ul li.banheiros span", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
 			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
 			return
 		default:
-			p.realState.SetBedrooms(e.Text)
+			p.realState.SetBathrooms(e.Text)
 		}
 	})
 }
