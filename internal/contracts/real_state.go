@@ -7,12 +7,23 @@ import (
 )
 
 type RealState struct {
-	ID          string
-	Cod         string
-	Name        string
-	Description string
-	Url         string
-	Price       int
+	ID              string
+	Cod             string
+	Name            string
+	Description     string
+	Url             string
+	Price           int
+	Bedrooms        int
+	Bathrooms       int
+	Area            int
+	GarageSpaces    int
+	Type            string
+	Neighborhood    string
+	Furnished       bool
+	YearBuilt       int
+	Characteristics []string
+	ForSale         bool
+	ForRent         bool
 }
 
 func (r *RealState) SetPrice(text string) error {
