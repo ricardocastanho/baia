@@ -13,4 +13,5 @@ type RealEstateScraper interface {
 	SetRealStateName(ctx context.Context, c *colly.Collector)
 	SetRealStateDescription(ctx context.Context, c *colly.Collector)
 	SetRealStatePrice(ctx context.Context, c *colly.Collector)
+	SetRealStateBedrooms(ctx context.Context, c *colly.Collector)
 }
