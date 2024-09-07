@@ -6,5 +6,5 @@ type RealState struct {
 	Name        string
 	Description string
 	Url         string
-	Price       float64
+	Price       int
 }
