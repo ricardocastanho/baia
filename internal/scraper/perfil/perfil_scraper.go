@@ -5,20 +5,17 @@ import (
 	"baia/pkg/collector"
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/gocolly/colly/v2"
 )
 
 // PerfilScraper implements the RealEstateScraperInterface for the "Perfil" real estate website.
-type PerfilScraper struct {
-	realState contracts.RealState
-}
+type PerfilScraper struct{}
 
 // NewPerfilScraper creates a new instance of PerfilScraper.
 func NewPerfilScraper() contracts.RealEstateScraper {
-	return &PerfilScraper{
-		realState: contracts.RealState{},
-	}
+	return &PerfilScraper{}
 }
 
 // GetRealStates starts the scraping process for the given URL using the provided context.
@@ -52,39 +49,42 @@ func (p *PerfilScraper) GetRealStates(ctx context.Context, url string) ([]string
 }
 
 // GetRealStateData gets all the data from a given url
-func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.RealState, url string) {
-	p.realState.Url = url
-
+func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.RealEstate, re *contracts.RealEstate) {
 	c := collector.NewCollector()
 
-	p.SetRealStateCode(ctx, c)
-	p.SetRealStateName(ctx, c)
-	p.SetRealStateDescription(ctx, c)
-	p.SetRealStatePrice(ctx, c)
-	p.SetRealStateBathrooms(ctx, c)
+	p.SetRealStateCode(ctx, c, re)
+	p.SetRealStateName(ctx, c, re)
+	p.SetRealStateDescription(ctx, c, re)
+	p.SetRealStatePrice(ctx, c, re)
+	p.SetRealStateBedrooms(ctx, c, re)
+	p.SetRealStateBathrooms(ctx, c, re)
+
+	c.OnScraped(func(c *colly.Response) {
+		ch <- *re
+	})
 
 	select {
 	case <-ctx.Done():
 		fmt.Println("Stopping visit due to context cancellation:", ctx.Err())
 	default:
-		c.Visit(url)
-		ch <- p.realState
+		c.Visit(re.Url)
+		return
 	}
 }
 
-func (p *PerfilScraper) SetRealStateCode(ctx context.Context, c *colly.Collector) {
+func (p *PerfilScraper) SetRealStateCode(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.property-title h2 span.imovel-codigo", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
 			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
 			return
 		default:
-			p.realState.SetCode(e.Text)
+			r.SetCode(e.Text)
 		}
 	})
 }
 
-func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector) {
+func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.property-title", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -96,31 +96,31 @@ func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector
 
 			span.Remove()
 
-			p.realState.SetName(h2.Text())
+			r.SetName(h2.Text())
 		}
 	})
 }
 
-func (p *PerfilScraper) SetRealStateDescription(ctx context.Context, c *colly.Collector) {
+func (p *PerfilScraper) SetRealStateDescription(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div#text-0 div p", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
 			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
 			return
 		default:
-			p.realState.SetDescription(e.Text)
+			r.SetDescription(e.Text)
 		}
 	})
 }
 
-func (p *PerfilScraper) SetRealStatePrice(ctx context.Context, c *colly.Collector) {
+func (p *PerfilScraper) SetRealStatePrice(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.valor-imovel span", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
 			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
 			return
 		default:
-			err := p.realState.SetPrice(e.Text)
+			err := r.SetPrice(e.Text)
 
 			if err != nil {
 				fmt.Println("Error while trying to parse real state price:", err)
@@ -130,14 +130,31 @@ func (p *PerfilScraper) SetRealStatePrice(ctx context.Context, c *colly.Collecto
 	})
 }
 
-func (p *PerfilScraper) SetRealStateBathrooms(ctx context.Context, c *colly.Collector) {
+func (p *PerfilScraper) SetRealStateBedrooms(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+	c.OnHTML("div.property-title span a span:nth-child(1)", func(e *colly.HTMLElement) {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
+			return
+		default:
+			re := regexp.MustCompile(`\d+`)
+			match := re.FindString(e.Text)
+
+			if match != "" {
+				r.SetBedrooms(match)
+			}
+		}
+	})
+}
+
+func (p *PerfilScraper) SetRealStateBathrooms(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("#conteudo div.container div div.col-lg-8.col-md-7 div ul li.banheiros span", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
 			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
 			return
 		default:
-			p.realState.SetBathrooms(e.Text)
+			r.SetBathrooms(e.Text)
 		}
 	})
 }

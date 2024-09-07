@@ -10,7 +10,7 @@ import (
 type Scraper struct {
 	scrapers []map[contracts.RealEstateScraper]string
 	jobs     chan ScraperJob
-	ch       chan contracts.RealState
+	ch       chan contracts.RealEstate
 	wg       sync.WaitGroup
 }
 
@@ -23,7 +23,7 @@ func NewScraper(s []map[contracts.RealEstateScraper]string) *Scraper {
 	return &Scraper{
 		scrapers: s,
 		jobs:     make(chan ScraperJob),
-		ch:       make(chan contracts.RealState),
+		ch:       make(chan contracts.RealEstate),
 	}
 }
 
@@ -32,7 +32,8 @@ func (s *Scraper) getRealStateData(ctx context.Context) {
 		for _, url := range job.urls {
 			go func(url string) {
 				defer s.wg.Done()
-				job.scraper.GetRealStateData(ctx, s.ch, url)
+				realEstate := contracts.RealEstate{Url: url}
+				job.scraper.GetRealStateData(ctx, s.ch, &realEstate)
 			}(url)
 		}
 

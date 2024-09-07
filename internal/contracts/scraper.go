@@ -8,10 +8,11 @@ import (
 
 type RealEstateScraper interface {
 	GetRealStates(ctx context.Context, url string) ([]string, []string)
-	GetRealStateData(ctx context.Context, ch chan RealState, url string)
-	SetRealStateCode(ctx context.Context, c *colly.Collector)
-	SetRealStateName(ctx context.Context, c *colly.Collector)
-	SetRealStateDescription(ctx context.Context, c *colly.Collector)
-	SetRealStatePrice(ctx context.Context, c *colly.Collector)
-	SetRealStateBathrooms(ctx context.Context, c *colly.Collector)
+	GetRealStateData(ctx context.Context, ch chan RealEstate, re *RealEstate)
+	SetRealStateCode(ctx context.Context, c *colly.Collector, re *RealEstate)
+	SetRealStateName(ctx context.Context, c *colly.Collector, re *RealEstate)
+	SetRealStateDescription(ctx context.Context, c *colly.Collector, re *RealEstate)
+	SetRealStatePrice(ctx context.Context, c *colly.Collector, re *RealEstate)
+	SetRealStateBedrooms(ctx context.Context, c *colly.Collector, re *RealEstate)
+	SetRealStateBathrooms(ctx context.Context, c *colly.Collector, re *RealEstate)
 }

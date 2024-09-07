@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type RealState struct {
+type RealEstate struct {
 	ID              string
 	Code            string
 	Name            string
@@ -26,7 +26,7 @@ type RealState struct {
 	ForRent         bool
 }
 
-func (r *RealState) SetCode(text string) error {
+func (r *RealEstate) SetCode(text string) error {
 	if !strings.Contains(text, "Cód. V") {
 		return errors.New("invalid format: keywork 'Cód. V' is missing")
 	}
@@ -38,42 +38,53 @@ func (r *RealState) SetCode(text string) error {
 	return nil
 }
 
-func (r *RealState) SetName(name string) error {
+func (r *RealEstate) SetName(name string) error {
 	r.Name = strings.TrimSpace(name)
 	return nil
 }
 
-func (r *RealState) SetDescription(description string) error {
+func (r *RealEstate) SetDescription(description string) error {
 	r.Description = strings.TrimSpace(description)
 	return nil
 }
 
-func (r *RealState) SetPrice(text string) error {
+func (r *RealEstate) SetPrice(text string) error {
 	if !strings.Contains(text, "R$") {
 		return errors.New("invalid format: keywork 'R$' is missing")
 	}
 
 	priceText := strings.TrimSpace(strings.Split(text, "R$")[1])
 	priceText = strings.ReplaceAll(priceText, ".", "")
-	priceText = strings.Replace(priceText, ",", ".", 1)
+	priceText = strings.Split(priceText, ",")[0]
 
-	priceFloat, err := strconv.ParseFloat(priceText, 64)
+	number, err := strconv.Atoi(priceText)
 	if err != nil {
 		return errors.New("error while converting the price: " + err.Error())
 	}
 
-	r.Price = int(priceFloat)
+	r.Price = number
 
 	return nil
 }
 
-func (r *RealState) SetBathrooms(text string) error {
-	bedRoomsFloat, err := strconv.ParseFloat(text, 64)
+func (r *RealEstate) SetBedrooms(text string) error {
+	number, err := strconv.Atoi(text)
+	if err != nil {
+		return errors.New("error while converting the bedroom field: " + err.Error())
+	}
+
+	r.Bedrooms = number
+
+	return nil
+}
+
+func (r *RealEstate) SetBathrooms(text string) error {
+	number, err := strconv.Atoi(text)
 	if err != nil {
 		return errors.New("error while converting the bathroom field: " + err.Error())
 	}
 
-	r.Bedrooms = int(bedRoomsFloat)
+	r.Bathrooms = number
 
 	return nil
 }
