@@ -43,6 +43,11 @@ func (r *RealState) SetName(name string) error {
 	return nil
 }
 
+func (r *RealState) SetDescription(description string) error {
+	r.Description = strings.TrimSpace(description)
+	return nil
+}
+
 func (r *RealState) SetPrice(text string) error {
 	if !strings.Contains(text, "R$") {
 		return errors.New("invalid format: keywork 'R$' is missing")

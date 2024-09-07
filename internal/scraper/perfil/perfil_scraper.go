@@ -5,7 +5,6 @@ import (
 	"baia/pkg/collector"
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/gocolly/colly/v2"
 )
@@ -109,7 +108,7 @@ func (p *PerfilScraper) SetRealStateDescription(ctx context.Context, c *colly.Co
 			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
 			return
 		default:
-			p.realState.Description = strings.TrimSpace(e.Text)
+			p.realState.SetDescription(e.Text)
 		}
 	})
 }
