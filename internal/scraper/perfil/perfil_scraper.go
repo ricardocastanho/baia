@@ -2,6 +2,7 @@ package perfil
 
 import (
 	"baia/internal/contracts"
+	"baia/internal/utils"
 	"baia/pkg/collector"
 	"context"
 	"fmt"
@@ -49,5 +50,50 @@ func (p *PerfilScraper) GetRealStates(ctx context.Context, url string) ([]string
 
 // GetRealStateData gets all the data from a given url
 func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.RealState, url string) {
-	ch <- contracts.RealState{Url: "acac"}
+	realState := contracts.RealState{}
+	realState.Url = url
+
+	c := collector.NewCollector()
+
+	c.OnHTML("div.property-title", func(e *colly.HTMLElement) {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
+			return
+		default:
+			h2 := e.DOM.Find("h2")
+			span := h2.Find("span")
+
+			realState.Cod = span.Text()
+
+			span.Remove()
+
+			realState.Name = h2.Text()
+		}
+	})
+
+	c.OnHTML("div.valor-imovel span", func(e *colly.HTMLElement) {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
+			return
+		default:
+			price, err := utils.ParsePriceToInt(e.Text)
+
+			if err != nil {
+				fmt.Println("Error while trying to parse real state price:", err)
+				return
+			}
+
+			realState.Price = price
+		}
+	})
+
+	select {
+	case <-ctx.Done():
+		fmt.Println("Stopping visit due to context cancellation:", ctx.Err())
+	default:
+		c.Visit(url)
+		ch <- realState
+	}
 }
