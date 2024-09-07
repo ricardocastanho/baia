@@ -11,5 +11,6 @@ type RealEstateScraper interface {
 	GetRealStateData(ctx context.Context, ch chan RealState, url string)
 	SetRealStateCode(ctx context.Context, c *colly.Collector)
 	SetRealStateName(ctx context.Context, c *colly.Collector)
+	SetRealStateDescription(ctx context.Context, c *colly.Collector)
 	SetRealStatePrice(ctx context.Context, c *colly.Collector)
 }

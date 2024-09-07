@@ -60,6 +60,7 @@ func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.
 
 	p.SetRealStateCode(ctx, c)
 	p.SetRealStateName(ctx, c)
+	p.SetRealStateDescription(ctx, c)
 	p.SetRealStatePrice(ctx, c)
 
 	select {
@@ -96,6 +97,18 @@ func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector
 			span.Remove()
 
 			p.realState.Name = strings.TrimSpace(h2.Text())
+		}
+	})
+}
+
+func (p *PerfilScraper) SetRealStateDescription(ctx context.Context, c *colly.Collector) {
+	c.OnHTML("div#text-0 div p", func(e *colly.HTMLElement) {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
+			return
+		default:
+			p.realState.Description = strings.TrimSpace(e.Text)
 		}
 	})
 }
