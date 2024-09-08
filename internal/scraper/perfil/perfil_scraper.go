@@ -62,6 +62,7 @@ func (p *PerfilScraper) GetRealEstateData(ctx context.Context, ch chan contracts
 	p.SetRealEstateGarageSpaces(ctx, c, re)
 	p.SetRealEstateLocation(ctx, c, re)
 	p.SetRealEstateFurnished(ctx, c, re)
+	p.SetRealEstateYearBuilt(ctx, c, re)
 
 	c.OnScraped(func(c *colly.Response) {
 		ch <- *re
@@ -216,4 +217,7 @@ func (p *PerfilScraper) SetRealEstateFurnished(ctx context.Context, c *colly.Col
 			r.SetFurnished(isFurnished)
 		}
 	})
+}
+
+func (p *PerfilScraper) SetRealEstateYearBuilt(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 }

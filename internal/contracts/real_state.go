@@ -132,3 +132,14 @@ func (r *RealEstate) SetFurnished(is bool) error {
 	r.Furnished = is
 	return nil
 }
+
+func (r *RealEstate) SetYearBuilt(text string) error {
+	number, err := strconv.Atoi(text)
+	if err != nil {
+		return errors.New("error while converting the year built field: " + err.Error())
+	}
+
+	r.YearBuilt = number
+
+	return nil
+}
