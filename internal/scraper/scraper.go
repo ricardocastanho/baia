@@ -7,8 +7,14 @@ import (
 	"sync"
 )
 
+type ScraperStrategy struct {
+	Scraper contracts.RealEstateScraper
+	Type    string
+	Url     string
+}
+
 type Scraper struct {
-	scrapers []map[contracts.RealEstateScraper]string
+	strategy []ScraperStrategy
 	jobs     chan ScraperJob
 	ch       chan contracts.RealEstate
 	wg       sync.WaitGroup
@@ -19,9 +25,9 @@ type ScraperJob struct {
 	urls    []string
 }
 
-func NewScraper(s []map[contracts.RealEstateScraper]string) *Scraper {
+func NewScraper(s []ScraperStrategy) *Scraper {
 	return &Scraper{
-		scrapers: s,
+		strategy: s,
 		jobs:     make(chan ScraperJob),
 		ch:       make(chan contracts.RealEstate),
 	}
@@ -53,29 +59,27 @@ func (s *Scraper) getRealEstateData(ctx context.Context) {
 	}()
 }
 
-func (s *Scraper) runScraper(ctx context.Context, scraperMap map[contracts.RealEstateScraper]string) {
+func (s *Scraper) runScraper(ctx context.Context, strategy ScraperStrategy) {
 	defer s.wg.Done()
 
-	for scraper := range scraperMap {
-		realEstateUrls, _ := scraper.GetRealEstates(ctx, scraperMap[scraper])
+	realEstateUrls, _ := strategy.Scraper.GetRealEstates(ctx, strategy.Url)
 
-		s.wg.Add(len(realEstateUrls))
+	s.wg.Add(len(realEstateUrls))
 
-		s.jobs <- ScraperJob{
-			scraper: scraper,
-			urls:    realEstateUrls,
-		}
+	s.jobs <- ScraperJob{
+		scraper: strategy.Scraper,
+		urls:    realEstateUrls,
 	}
 }
 
 func (s *Scraper) Run(ctx context.Context) {
-	s.wg.Add(len(s.scrapers))
+	s.wg.Add(len(s.strategy))
 
 	go s.getRealEstateData(ctx)
 
-	for i := range s.scrapers {
-		scraperMap := s.scrapers[i]
-		go s.runScraper(ctx, scraperMap)
+	for i := range s.strategy {
+		strategy := s.strategy[i]
+		go s.runScraper(ctx, strategy)
 	}
 
 	s.wg.Wait()

@@ -13,12 +13,14 @@ func main() {
 	ctx, cancel := utils.NewCancelableContext()
 	defer cancel()
 
-	scrapers := make([]map[contracts.RealEstateScraper]string, 0)
+	scrapers := make([]scraper.ScraperStrategy, 0)
 
 	perfilScraper := perfil.NewPerfilScraper()
 
-	scrapers = append(scrapers, map[contracts.RealEstateScraper]string{
-		perfilScraper: "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/",
+	scrapers = append(scrapers, scraper.ScraperStrategy{
+		Scraper: perfilScraper,
+		Url:     "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/",
+		Type:    contracts.Apartment,
 	})
 
 	s := scraper.NewScraper(scrapers)

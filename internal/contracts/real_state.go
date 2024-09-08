@@ -6,9 +6,18 @@ import (
 	"strings"
 )
 
+const (
+	House      string = "House"
+	Apartment  string = "Apartment"
+	Land       string = "Land"
+	Commercial string = "Commercial"
+	Industrial string = "Industrial"
+)
+
 type RealEstate struct {
 	ID           string
 	Code         string
+	Type         string
 	Name         string
 	Description  string
 	Url          string
@@ -17,7 +26,6 @@ type RealEstate struct {
 	Bathrooms    int
 	Area         int
 	GarageSpaces int
-	Type         string
 	Neighborhood string
 	Furnished    bool
 	YearBuilt    int
