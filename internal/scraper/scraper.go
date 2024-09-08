@@ -27,13 +27,13 @@ func NewScraper(s []map[contracts.RealEstateScraper]string) *Scraper {
 	}
 }
 
-func (s *Scraper) getRealStateData(ctx context.Context) {
+func (s *Scraper) getRealEstateData(ctx context.Context) {
 	for job := range s.jobs {
 		for _, url := range job.urls {
 			go func(url string) {
 				defer s.wg.Done()
 				realEstate := contracts.RealEstate{Url: url}
-				job.scraper.GetRealStateData(ctx, s.ch, &realEstate)
+				job.scraper.GetRealEstateData(ctx, s.ch, &realEstate)
 			}(url)
 		}
 
@@ -57,13 +57,13 @@ func (s *Scraper) runScraper(ctx context.Context, scraperMap map[contracts.RealE
 	defer s.wg.Done()
 
 	for scraper := range scraperMap {
-		realStateUrls, _ := scraper.GetRealStates(ctx, scraperMap[scraper])
+		realEstateUrls, _ := scraper.GetRealEstates(ctx, scraperMap[scraper])
 
-		s.wg.Add(len(realStateUrls))
+		s.wg.Add(len(realEstateUrls))
 
 		s.jobs <- ScraperJob{
 			scraper: scraper,
-			urls:    realStateUrls,
+			urls:    realEstateUrls,
 		}
 	}
 }
@@ -71,7 +71,7 @@ func (s *Scraper) runScraper(ctx context.Context, scraperMap map[contracts.RealE
 func (s *Scraper) Run(ctx context.Context) {
 	s.wg.Add(len(s.scrapers))
 
-	go s.getRealStateData(ctx)
+	go s.getRealEstateData(ctx)
 
 	for i := range s.scrapers {
 		scraperMap := s.scrapers[i]

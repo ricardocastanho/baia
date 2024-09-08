@@ -18,11 +18,11 @@ func NewPerfilScraper() contracts.RealEstateScraper {
 	return &PerfilScraper{}
 }
 
-// GetRealStates starts the scraping process for the given URL using the provided context.
-func (p *PerfilScraper) GetRealStates(ctx context.Context, url string) ([]string, []string) {
+// GetRealEstates starts the scraping process for the given URL using the provided context.
+func (p *PerfilScraper) GetRealEstates(ctx context.Context, url string) ([]string, []string) {
 	var (
-		realStateurls = []string{}
-		nextPages     = []string{}
+		realEstateurls = []string{}
+		nextPages      = []string{}
 	)
 
 	c := collector.NewCollector()
@@ -33,7 +33,7 @@ func (p *PerfilScraper) GetRealStates(ctx context.Context, url string) ([]string
 			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
 			return
 		default:
-			realStateurls = append(realStateurls, e.Attr("href"))
+			realEstateurls = append(realEstateurls, e.Attr("href"))
 		}
 	})
 
@@ -44,22 +44,22 @@ func (p *PerfilScraper) GetRealStates(ctx context.Context, url string) ([]string
 	default:
 		c.Visit(url)
 
-		return realStateurls, nextPages
+		return realEstateurls, nextPages
 	}
 }
 
-// GetRealStateData gets all the data from a given url
-func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.RealEstate, re *contracts.RealEstate) {
+// GetRealEstateData gets all the data from a given url
+func (p *PerfilScraper) GetRealEstateData(ctx context.Context, ch chan contracts.RealEstate, re *contracts.RealEstate) {
 	c := collector.NewCollector()
 
-	p.SetRealStateCode(ctx, c, re)
-	p.SetRealStateName(ctx, c, re)
-	p.SetRealStateDescription(ctx, c, re)
-	p.SetRealStatePrice(ctx, c, re)
-	p.SetRealStateBedrooms(ctx, c, re)
-	p.SetRealStateBathrooms(ctx, c, re)
-	p.SetRealStateArea(ctx, c, re)
-	p.SetRealStateGarageSpaces(ctx, c, re)
+	p.SetRealEstateCode(ctx, c, re)
+	p.SetRealEstateName(ctx, c, re)
+	p.SetRealEstateDescription(ctx, c, re)
+	p.SetRealEstatePrice(ctx, c, re)
+	p.SetRealEstateBedrooms(ctx, c, re)
+	p.SetRealEstateBathrooms(ctx, c, re)
+	p.SetRealEstateArea(ctx, c, re)
+	p.SetRealEstateGarageSpaces(ctx, c, re)
 
 	c.OnScraped(func(c *colly.Response) {
 		ch <- *re
@@ -74,7 +74,7 @@ func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.
 	}
 }
 
-func (p *PerfilScraper) SetRealStateCode(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+func (p *PerfilScraper) SetRealEstateCode(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.property-title h2 span.imovel-codigo", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -86,7 +86,7 @@ func (p *PerfilScraper) SetRealStateCode(ctx context.Context, c *colly.Collector
 	})
 }
 
-func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+func (p *PerfilScraper) SetRealEstateName(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.property-title", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -103,7 +103,7 @@ func (p *PerfilScraper) SetRealStateName(ctx context.Context, c *colly.Collector
 	})
 }
 
-func (p *PerfilScraper) SetRealStateDescription(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+func (p *PerfilScraper) SetRealEstateDescription(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div#text-0 div p", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -115,7 +115,7 @@ func (p *PerfilScraper) SetRealStateDescription(ctx context.Context, c *colly.Co
 	})
 }
 
-func (p *PerfilScraper) SetRealStatePrice(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+func (p *PerfilScraper) SetRealEstatePrice(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.valor-imovel span", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -132,7 +132,7 @@ func (p *PerfilScraper) SetRealStatePrice(ctx context.Context, c *colly.Collecto
 	})
 }
 
-func (p *PerfilScraper) SetRealStateBedrooms(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+func (p *PerfilScraper) SetRealEstateBedrooms(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.property-title span a span:nth-child(1)", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -149,7 +149,7 @@ func (p *PerfilScraper) SetRealStateBedrooms(ctx context.Context, c *colly.Colle
 	})
 }
 
-func (p *PerfilScraper) SetRealStateBathrooms(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+func (p *PerfilScraper) SetRealEstateBathrooms(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("#conteudo div.container div div.col-lg-8.col-md-7 div ul li.banheiros span", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -161,7 +161,7 @@ func (p *PerfilScraper) SetRealStateBathrooms(ctx context.Context, c *colly.Coll
 	})
 }
 
-func (p *PerfilScraper) SetRealStateArea(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+func (p *PerfilScraper) SetRealEstateArea(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.property-description ul.listing-features li.area span", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -173,7 +173,7 @@ func (p *PerfilScraper) SetRealStateArea(ctx context.Context, c *colly.Collector
 	})
 }
 
-func (p *PerfilScraper) SetRealStateGarageSpaces(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+func (p *PerfilScraper) SetRealEstateGarageSpaces(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.property-description ul.listing-features li.vagas span", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
