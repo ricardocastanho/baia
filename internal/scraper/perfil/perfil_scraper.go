@@ -61,6 +61,7 @@ func (p *PerfilScraper) GetRealEstateData(ctx context.Context, ch chan contracts
 	p.SetRealEstateArea(ctx, c, re)
 	p.SetRealEstateGarageSpaces(ctx, c, re)
 	p.SetRealEstateLocation(ctx, c, re)
+	p.SetRealEstateFurnished(ctx, c, re)
 
 	c.OnScraped(func(c *colly.Response) {
 		ch <- *re
@@ -200,6 +201,19 @@ func (p *PerfilScraper) SetRealEstateLocation(ctx context.Context, c *colly.Coll
 			i.Remove()
 
 			r.SetLocation(span.Text())
+		}
+	})
+}
+
+func (p *PerfilScraper) SetRealEstateFurnished(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+	c.OnHTML("div.property-description ul.listing-features li.mobilia span", func(e *colly.HTMLElement) {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
+			return
+		default:
+			isFurnished := e.Text == "Semi" || e.Text == "Sim"
+			r.SetFurnished(isFurnished)
 		}
 	})
 }

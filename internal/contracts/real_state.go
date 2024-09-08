@@ -127,3 +127,8 @@ func (r *RealEstate) SetLocation(text string) error {
 	r.Location = strings.TrimSpace(strings.ReplaceAll(text, "/\t", ""))
 	return nil
 }
+
+func (r *RealEstate) SetFurnished(is bool) error {
+	r.Furnished = is
+	return nil
+}

@@ -18,4 +18,5 @@ type RealEstateScraper interface {
 	SetRealEstateArea(ctx context.Context, c *colly.Collector, re *RealEstate)
 	SetRealEstateGarageSpaces(ctx context.Context, c *colly.Collector, re *RealEstate)
 	SetRealEstateLocation(ctx context.Context, c *colly.Collector, re *RealEstate)
+	SetRealEstateFurnished(ctx context.Context, c *colly.Collector, re *RealEstate)
 }
