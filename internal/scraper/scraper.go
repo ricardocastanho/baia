@@ -23,6 +23,7 @@ type Scraper struct {
 type ScraperJob struct {
 	scraper contracts.RealEstateScraper
 	urls    []string
+	Type    string
 }
 
 func NewScraper(s []ScraperStrategy) *Scraper {
@@ -38,7 +39,7 @@ func (s *Scraper) getRealEstateData(ctx context.Context) {
 		for _, url := range job.urls {
 			go func(url string) {
 				defer s.wg.Done()
-				realEstate := contracts.RealEstate{Url: url}
+				realEstate := contracts.RealEstate{Url: url, Type: job.Type}
 				job.scraper.GetRealEstateData(ctx, s.ch, &realEstate)
 			}(url)
 		}
@@ -69,6 +70,7 @@ func (s *Scraper) runScraper(ctx context.Context, strategy ScraperStrategy) {
 	s.jobs <- ScraperJob{
 		scraper: strategy.Scraper,
 		urls:    realEstateUrls,
+		Type:    strategy.Type,
 	}
 }
 
