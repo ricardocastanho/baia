@@ -11,6 +11,8 @@ type ScraperStrategy struct {
 	Scraper contracts.RealEstateScraper
 	Type    string
 	Url     string
+	ForSale bool
+	ForRent bool
 }
 
 type Scraper struct {
@@ -18,12 +20,16 @@ type Scraper struct {
 	jobs     chan ScraperJob
 	ch       chan contracts.RealEstate
 	wg       sync.WaitGroup
+	count    int
+	total    int
 }
 
 type ScraperJob struct {
 	scraper contracts.RealEstateScraper
 	urls    []string
 	Type    string
+	ForSale bool
+	ForRent bool
 }
 
 func NewScraper(s []ScraperStrategy) *Scraper {
@@ -39,7 +45,7 @@ func (s *Scraper) getRealEstateData(ctx context.Context) {
 		for _, url := range job.urls {
 			go func(url string) {
 				defer s.wg.Done()
-				realEstate := contracts.RealEstate{Url: url, Type: job.Type}
+				realEstate := contracts.RealEstate{Url: url, Type: job.Type, ForSale: job.ForSale, ForRent: job.ForRent}
 				job.scraper.GetRealEstateData(ctx, s.ch, &realEstate)
 			}(url)
 		}
@@ -49,6 +55,7 @@ func (s *Scraper) getRealEstateData(ctx context.Context) {
 			return
 		default:
 			for data := range s.ch {
+				s.count++
 				fmt.Println("Real State: ", data)
 			}
 		}
@@ -66,11 +73,14 @@ func (s *Scraper) runScraper(ctx context.Context, strategy ScraperStrategy) {
 	realEstateUrls, _ := strategy.Scraper.GetRealEstates(ctx, strategy.Url)
 
 	s.wg.Add(len(realEstateUrls))
+	s.total += len(realEstateUrls)
 
 	s.jobs <- ScraperJob{
 		scraper: strategy.Scraper,
 		urls:    realEstateUrls,
 		Type:    strategy.Type,
+		ForSale: strategy.ForSale,
+		ForRent: strategy.ForRent,
 	}
 }
 
@@ -87,4 +97,7 @@ func (s *Scraper) Run(ctx context.Context) {
 	s.wg.Wait()
 
 	close(s.jobs)
+
+	fmt.Println("Count: ", s.count)
+	fmt.Println("Total: ", s.total)
 }

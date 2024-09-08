@@ -21,6 +21,7 @@ func main() {
 		Scraper: perfilScraper,
 		Url:     "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/",
 		Type:    contracts.Apartment,
+		ForSale: true,
 	})
 
 	s := scraper.NewScraper(scrapers)
