@@ -26,7 +26,7 @@ type RealEstate struct {
 	Bathrooms    int
 	Area         int
 	GarageSpaces int
-	Neighborhood string
+	Location     string
 	Furnished    bool
 	YearBuilt    int
 	Photos       []string
@@ -120,5 +120,10 @@ func (r *RealEstate) SetGarageSpaces(text string) error {
 
 	r.GarageSpaces = number
 
+	return nil
+}
+
+func (r *RealEstate) SetLocation(text string) error {
+	r.Location = strings.TrimSpace(strings.ReplaceAll(text, "/\t", ""))
 	return nil
 }
