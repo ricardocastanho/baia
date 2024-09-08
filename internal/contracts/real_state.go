@@ -89,3 +89,17 @@ func (r *RealEstate) SetBathrooms(text string) error {
 
 	return nil
 }
+
+func (r *RealEstate) SetArea(text string) error {
+	areaText := strings.Split(text, " m²")[0]
+	areaText = strings.ReplaceAll(areaText, ".", "")
+	areaText = strings.Split(areaText, ",")[0]
+	number, err := strconv.Atoi(areaText)
+	if err != nil {
+		return errors.New("error while converting the area field: " + err.Error())
+	}
+
+	r.Area = number
+
+	return nil
+}

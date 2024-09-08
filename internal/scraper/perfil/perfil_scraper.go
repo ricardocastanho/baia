@@ -58,6 +58,7 @@ func (p *PerfilScraper) GetRealStateData(ctx context.Context, ch chan contracts.
 	p.SetRealStatePrice(ctx, c, re)
 	p.SetRealStateBedrooms(ctx, c, re)
 	p.SetRealStateBathrooms(ctx, c, re)
+	p.SetRealStateArea(ctx, c, re)
 
 	c.OnScraped(func(c *colly.Response) {
 		ch <- *re
@@ -155,6 +156,18 @@ func (p *PerfilScraper) SetRealStateBathrooms(ctx context.Context, c *colly.Coll
 			return
 		default:
 			r.SetBathrooms(e.Text)
+		}
+	})
+}
+
+func (p *PerfilScraper) SetRealStateArea(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+	c.OnHTML("div.property-description ul.listing-features li.area span", func(e *colly.HTMLElement) {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
+			return
+		default:
+			r.SetArea(e.Text)
 		}
 	})
 }
