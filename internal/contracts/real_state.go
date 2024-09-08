@@ -143,3 +143,8 @@ func (r *RealEstate) SetYearBuilt(text string) error {
 
 	return nil
 }
+
+func (r *RealEstate) SetPhoto(url string) error {
+	r.Photos = append(r.Photos, url)
+	return nil
+}
