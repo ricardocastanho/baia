@@ -103,3 +103,14 @@ func (r *RealEstate) SetArea(text string) error {
 
 	return nil
 }
+
+func (r *RealEstate) SetGarageSpaces(text string) error {
+	number, err := strconv.Atoi(text)
+	if err != nil {
+		return errors.New("error while converting the garage spaces field: " + err.Error())
+	}
+
+	r.GarageSpaces = number
+
+	return nil
+}
