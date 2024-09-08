@@ -21,4 +21,5 @@ type RealEstateScraper interface {
 	SetRealEstateFurnished(ctx context.Context, c *colly.Collector, re *RealEstate)
 	SetRealEstateYearBuilt(ctx context.Context, c *colly.Collector, re *RealEstate)
 	SetRealEstatePhotos(ctx context.Context, c *colly.Collector, re *RealEstate)
+	SetRealEstateTags(ctx context.Context, c *colly.Collector, re *RealEstate)
 }

@@ -64,6 +64,7 @@ func (p *PerfilScraper) GetRealEstateData(ctx context.Context, ch chan contracts
 	p.SetRealEstateFurnished(ctx, c, re)
 	p.SetRealEstateYearBuilt(ctx, c, re)
 	p.SetRealEstatePhotos(ctx, c, re)
+	p.SetRealEstateTags(ctx, c, re)
 
 	c.OnScraped(func(c *colly.Response) {
 		ch <- *re
@@ -232,6 +233,18 @@ func (p *PerfilScraper) SetRealEstatePhotos(ctx context.Context, c *colly.Collec
 		default:
 			src := e.Attr("src")
 			r.SetPhoto(src)
+		}
+	})
+}
+
+func (p *PerfilScraper) SetRealEstateTags(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+	c.OnHTML("ul.property-features li", func(e *colly.HTMLElement) {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Stopping collection due to context cancellation:", ctx.Err())
+			return
+		default:
+			r.SetTag(e.Text)
 		}
 	})
 }

@@ -148,3 +148,8 @@ func (r *RealEstate) SetPhoto(url string) error {
 	r.Photos = append(r.Photos, url)
 	return nil
 }
+
+func (r *RealEstate) SetTag(tag string) error {
+	r.Tags = append(r.Tags, tag)
+	return nil
+}
