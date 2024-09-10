@@ -8,7 +8,7 @@ import (
 
 type RealEstateScraper interface {
 	GetRealEstateUrls(ctx context.Context, url string) ([]string, []string)
-	GetRealEstateData(ctx context.Context, ch chan RealEstate, re *RealEstate)
+	GetRealEstate(ctx context.Context, ch chan RealEstate, re *RealEstate)
 	SetRealEstateCode(ctx context.Context, c *colly.Collector, re *RealEstate)
 	SetRealEstateName(ctx context.Context, c *colly.Collector, re *RealEstate)
 	SetRealEstateDescription(ctx context.Context, c *colly.Collector, re *RealEstate)

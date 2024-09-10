@@ -48,8 +48,8 @@ func (p *PerfilScraper) GetRealEstateUrls(ctx context.Context, url string) ([]st
 	}
 }
 
-// GetRealEstateData gets all the data from a given url
-func (p *PerfilScraper) GetRealEstateData(ctx context.Context, ch chan contracts.RealEstate, re *contracts.RealEstate) {
+// GetRealEstate gets all the data from a given url
+func (p *PerfilScraper) GetRealEstate(ctx context.Context, ch chan contracts.RealEstate, re *contracts.RealEstate) {
 	c := collector.NewCollector()
 
 	p.SetRealEstateCode(ctx, c, re)

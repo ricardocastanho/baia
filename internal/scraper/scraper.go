@@ -40,13 +40,13 @@ func NewScraper(s []ScraperStrategy) *Scraper {
 	}
 }
 
-func (s *Scraper) getRealEstateData(ctx context.Context) {
+func (s *Scraper) GetRealEstate(ctx context.Context) {
 	for job := range s.jobs {
 		for _, url := range job.urls {
 			go func(url string) {
 				defer s.wg.Done()
 				realEstate := contracts.RealEstate{Url: url, Type: job.Type, ForSale: job.ForSale, ForRent: job.ForRent}
-				job.scraper.GetRealEstateData(ctx, s.ch, &realEstate)
+				job.scraper.GetRealEstate(ctx, s.ch, &realEstate)
 			}(url)
 		}
 
@@ -87,7 +87,7 @@ func (s *Scraper) runScraper(ctx context.Context, strategy ScraperStrategy) {
 func (s *Scraper) Run(ctx context.Context) {
 	s.wg.Add(len(s.strategy))
 
-	go s.getRealEstateData(ctx)
+	go s.GetRealEstate(ctx)
 
 	for i := range s.strategy {
 		strategy := s.strategy[i]
