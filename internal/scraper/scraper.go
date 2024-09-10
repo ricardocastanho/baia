@@ -70,7 +70,7 @@ func (s *Scraper) getRealEstateData(ctx context.Context) {
 func (s *Scraper) runScraper(ctx context.Context, strategy ScraperStrategy) {
 	defer s.wg.Done()
 
-	realEstateUrls, _ := strategy.Scraper.GetRealEstates(ctx, strategy.Url)
+	realEstateUrls, _ := strategy.Scraper.GetRealEstateUrls(ctx, strategy.Url)
 
 	s.wg.Add(len(realEstateUrls))
 	s.total += len(realEstateUrls)

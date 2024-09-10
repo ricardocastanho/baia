@@ -18,8 +18,8 @@ func NewPerfilScraper() contracts.RealEstateScraper {
 	return &PerfilScraper{}
 }
 
-// GetRealEstates starts the scraping process for the given URL using the provided context.
-func (p *PerfilScraper) GetRealEstates(ctx context.Context, url string) ([]string, []string) {
+// GetRealEstateUrls starts the scraping process for the given URL using the provided context.
+func (p *PerfilScraper) GetRealEstateUrls(ctx context.Context, url string) ([]string, []string) {
 	var (
 		realEstateurls = []string{}
 		nextPages      = []string{}
