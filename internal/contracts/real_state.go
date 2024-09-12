@@ -1,9 +1,13 @@
 package contracts
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 const (
@@ -152,4 +156,63 @@ func (r *RealEstate) SetPhoto(url string) error {
 func (r *RealEstate) SetTag(tag string) error {
 	r.Tags = append(r.Tags, tag)
 	return nil
+}
+
+func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) error {
+	session := driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		query := `
+			CREATE (r:RealEstate {
+				id: $id,
+				code: $code,
+				type: $type,
+				name: $name,
+				description: $description,
+				url: $url,
+				price: $price,
+				bedrooms: $bedrooms,
+				bathrooms: $bathrooms,
+				area: $area,
+				garageSpaces: $garageSpaces,
+				location: $location,
+				furnished: $furnished,
+				yearBuilt: $yearBuilt,
+				photos: $photos,
+				tags: $tags,
+				forSale: $forSale,
+				forRent: $forRent
+			})
+			RETURN r
+		`
+
+		_, err := tx.Run(ctx, query, map[string]any{
+			"id":           r.ID,
+			"code":         r.Code,
+			"type":         r.Type,
+			"name":         r.Name,
+			"description":  r.Description,
+			"url":          r.Url,
+			"price":        r.Price,
+			"bedrooms":     r.Bedrooms,
+			"bathrooms":    r.Bathrooms,
+			"area":         r.Area,
+			"garageSpaces": r.GarageSpaces,
+			"location":     r.Location,
+			"furnished":    r.Furnished,
+			"yearBuilt":    r.YearBuilt,
+			"photos":       r.Photos,
+			"tags":         r.Tags,
+			"forSale":      r.ForSale,
+			"forRent":      r.ForRent,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute query: %w", err)
+		}
+
+		return nil, nil
+	})
+
+	return err
 }

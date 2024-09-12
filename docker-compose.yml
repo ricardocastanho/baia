@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:5
+    container_name: neo4j
+    environment:
+      - NEO4J_AUTH=neo4j/12345678   # Username/password for Neo4j (you can change this)
+      - NEO4J_dbms_memory_heap_initial__size=1G
+      - NEO4J_dbms_memory_heap_max__size=2G
+      - NEO4J_dbms_memory_pagecache_size=512M
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+    ports:
+      - "7474:7474"  # HTTP port for accessing the Neo4j browser
+      - "7687:7687"  # Bolt port for accessing the database
+    volumes:
+      - ./.neo4j/data:/data         # Persist data in the "neo4j" folder in the project root
+      - ./.neo4j/logs:/logs         # Persist logs
+      - ./.neo4j/import:/import     # Directory for importing data
+      - ./.neo4j/plugins:/plugins   # Directory for custom plugins
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:

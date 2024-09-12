@@ -50,3 +50,6 @@ coverage.out
 
 # Ignore Git LFS files (if you use it)
 .lfs/
+
+# Database volumes
+.neo4j
