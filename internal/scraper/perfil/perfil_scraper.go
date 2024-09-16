@@ -9,6 +9,7 @@ import (
 	"regexp"
 
 	"github.com/gocolly/colly/v2"
+	"github.com/ricardocastanho/scrapify"
 )
 
 // PerfilScraper implements the RealEstateScraperInterface for the "Perfil" real estate website.
@@ -17,14 +18,14 @@ type PerfilScraper struct {
 }
 
 // NewPerfilScraper creates a new instance of PerfilScraper.
-func NewPerfilScraper(logger *slog.Logger) contracts.RealEstateScraper {
+func NewPerfilScraper(logger *slog.Logger) scrapify.IScraper[contracts.RealEstate] {
 	return &PerfilScraper{
 		logger: logger,
 	}
 }
 
 // GetRealEstateUrls starts the scraping process for the given URL using the provided context.
-func (p *PerfilScraper) GetRealEstateUrls(ctx context.Context, url string) ([]string, []string) {
+func (p *PerfilScraper) GetUrls(ctx context.Context, url string) ([]string, []string) {
 	var (
 		realEstateurls = []string{}
 		nextPages      = []string{}
@@ -64,32 +65,34 @@ func (p *PerfilScraper) GetRealEstateUrls(ctx context.Context, url string) ([]st
 }
 
 // GetRealEstate gets all the data from a given url
-func (p *PerfilScraper) GetRealEstate(ctx context.Context, ch chan contracts.RealEstate, re *contracts.RealEstate) {
+func (p *PerfilScraper) GetData(ctx context.Context, ch chan<- contracts.RealEstate, data *contracts.RealEstate, url string) {
 	c := collector.NewCollector(p.logger)
 
-	p.SetRealEstateCode(ctx, c, re)
-	p.SetRealEstateName(ctx, c, re)
-	p.SetRealEstateDescription(ctx, c, re)
-	p.SetRealEstatePrice(ctx, c, re)
-	p.SetRealEstateBedrooms(ctx, c, re)
-	p.SetRealEstateBathrooms(ctx, c, re)
-	p.SetRealEstateArea(ctx, c, re)
-	p.SetRealEstateGarageSpaces(ctx, c, re)
-	p.SetRealEstateLocation(ctx, c, re)
-	p.SetRealEstateFurnished(ctx, c, re)
-	p.SetRealEstateYearBuilt(ctx, c, re)
-	p.SetRealEstatePhotos(ctx, c, re)
-	p.SetRealEstateTags(ctx, c, re)
+	p.SetRealEstateCode(ctx, c, data)
+	p.SetRealEstateName(ctx, c, data)
+	p.SetRealEstateDescription(ctx, c, data)
+	p.SetRealEstatePrice(ctx, c, data)
+	p.SetRealEstateBedrooms(ctx, c, data)
+	p.SetRealEstateBathrooms(ctx, c, data)
+	p.SetRealEstateArea(ctx, c, data)
+	p.SetRealEstateGarageSpaces(ctx, c, data)
+	p.SetRealEstateLocation(ctx, c, data)
+	p.SetRealEstateFurnished(ctx, c, data)
+	p.SetRealEstateYearBuilt(ctx, c, data)
+	p.SetRealEstatePhotos(ctx, c, data)
+	p.SetRealEstateTags(ctx, c, data)
+
+	data.Url = url
 
 	c.OnScraped(func(c *colly.Response) {
-		ch <- *re
+		ch <- *data
 	})
 
 	select {
 	case <-ctx.Done():
 		p.logger.Debug(fmt.Sprint("Stopping visit due to context cancellation:", ctx.Err()))
 	default:
-		c.Visit(re.Url)
+		c.Visit(url)
 		return
 	}
 }

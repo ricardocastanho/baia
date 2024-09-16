@@ -5,14 +5,15 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	"baia/internal/contracts"
-	"baia/internal/scraper"
 	"baia/internal/scraper/perfil"
 	"baia/internal/utils"
 	"baia/pkg/database"
 
 	"github.com/joho/godotenv"
+	"github.com/ricardocastanho/scrapify"
 )
 
 func main() {
@@ -46,18 +47,20 @@ func main() {
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	scrapers := make([]scraper.ScraperStrategy, 0)
+	strategies := make([]scrapify.ScraperStrategy[contracts.RealEstate], 0)
 
 	perfilScraper := perfil.NewPerfilScraper(logger)
 
-	scrapers = append(scrapers, scraper.ScraperStrategy{
+	strategies = append(strategies, scrapify.ScraperStrategy[contracts.RealEstate]{
 		Scraper: perfilScraper,
 		Url:     "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/&pg=1",
-		Type:    contracts.Apartment,
-		ForSale: true,
 	})
 
-	s := scraper.NewScraper(driver, logger, scrapers)
+	callback := func(re contracts.RealEstate) {
+		re.Save(ctx, driver)
+	}
+
+	s := scrapify.NewScraper(strategies, callback, time.Second*10)
 
 	s.Run(ctx)
 
