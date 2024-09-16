@@ -49,23 +49,27 @@ func NewScraper(driver neo4j.DriverWithContext, logger *slog.Logger, s []Scraper
 }
 
 func (s *Scraper) getRealEstate(ctx context.Context) {
-	for job := range s.jobs {
-		for _, url := range job.urls {
-			go func(url string) {
-				defer s.wg.Done()
+	go func() {
+		for job := range s.jobs {
+			for _, url := range job.urls {
+				go func(url string) {
+					defer s.wg.Done()
 
-				_, ok := s.scrapedUrls[url]
-				if ok {
-					return
-				}
+					_, ok := s.scrapedUrls[url]
+					if ok {
+						return
+					}
 
-				realEstate := contracts.RealEstate{Url: url, Type: job.Type, ForSale: job.ForSale, ForRent: job.ForRent}
-				job.scraper.GetRealEstate(ctx, s.ch, &realEstate)
-				s.scrapedUrls[url] = true
-			}(url)
-			time.Sleep(time.Second * 3)
+					realEstate := contracts.RealEstate{Url: url, Type: job.Type, ForSale: job.ForSale, ForRent: job.ForRent}
+					job.scraper.GetRealEstate(ctx, s.ch, &realEstate)
+					s.scrapedUrls[url] = true
+				}(url)
+				time.Sleep(time.Second * 2) // todo remover
+			}
 		}
+	}()
 
+	go func() {
 		select {
 		case <-ctx.Done():
 			return
@@ -77,15 +81,28 @@ func (s *Scraper) getRealEstate(ctx context.Context) {
 				}
 			}
 		}
-	}
-
-	go func() {
-		s.wg.Wait()
-		close(s.ch)
 	}()
 }
 
-func (s *Scraper) getNextPages(ctx context.Context, strategy ScraperStrategy, nextPages []string) {
+func (s *Scraper) runScraper(ctx context.Context, strategy ScraperStrategy) {
+	defer func() {
+		s.wg.Done()
+	}()
+
+	realEstateUrls, nextPages := strategy.Scraper.GetRealEstateUrls(ctx, strategy.Url)
+	s.scrapedUrls[strategy.Url] = true
+
+	s.wg.Add(len(realEstateUrls))
+
+	s.wg.Add(1)
+	s.jobs <- ScraperJob{
+		scraper: strategy.Scraper,
+		urls:    realEstateUrls,
+		Type:    strategy.Type,
+		ForSale: strategy.ForSale,
+		ForRent: strategy.ForRent,
+	}
+
 	for _, newUrl := range nextPages {
 		_, ok := s.scrapedUrls[newUrl]
 
@@ -106,27 +123,6 @@ func (s *Scraper) getNextPages(ctx context.Context, strategy ScraperStrategy, ne
 	}
 }
 
-func (s *Scraper) runScraper(ctx context.Context, strategy ScraperStrategy) {
-	defer func() {
-		s.wg.Done()
-	}()
-
-	realEstateUrls, nextPages := strategy.Scraper.GetRealEstateUrls(ctx, strategy.Url)
-	s.scrapedUrls[strategy.Url] = true
-
-	s.wg.Add(len(realEstateUrls))
-
-	s.jobs <- ScraperJob{
-		scraper: strategy.Scraper,
-		urls:    realEstateUrls,
-		Type:    strategy.Type,
-		ForSale: strategy.ForSale,
-		ForRent: strategy.ForRent,
-	}
-
-	s.getNextPages(ctx, strategy, nextPages)
-}
-
 func (s *Scraper) Run(ctx context.Context) {
 	s.wg.Add(len(s.strategy))
 
@@ -140,4 +136,5 @@ func (s *Scraper) Run(ctx context.Context) {
 	s.wg.Wait()
 
 	close(s.jobs)
+	close(s.ch)
 }
