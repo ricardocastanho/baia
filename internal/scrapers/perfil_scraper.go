@@ -1,4 +1,4 @@
-package perfil
+package scrapers
 
 import (
 	"baia/internal/contracts"

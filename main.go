@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"baia/internal/contracts"
-	"baia/internal/scraper/perfil"
+	"baia/internal/scrapers"
 	"baia/internal/utils"
 	"baia/pkg/database"
 
@@ -49,7 +49,7 @@ func main() {
 
 	strategies := make([]scrapify.ScraperStrategy[contracts.RealEstate], 0)
 
-	perfilScraper := perfil.NewPerfilScraper(logger)
+	perfilScraper := scrapers.NewPerfilScraper(logger)
 
 	strategies = append(strategies, scrapify.ScraperStrategy[contracts.RealEstate]{
 		Scraper: perfilScraper,
