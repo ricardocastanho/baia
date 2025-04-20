@@ -1,6 +1,7 @@
 package contracts
 
 import (
+	"baia/internal/utils"
 	"context"
 	"errors"
 	"fmt"
@@ -19,24 +20,26 @@ const (
 )
 
 type RealEstate struct {
-	ID           string
-	Code         string
-	Type         string
-	Name         string
-	Description  string
-	Url          string
-	Price        int
-	Bedrooms     int
-	Bathrooms    int
-	Area         int
-	GarageSpaces int
-	Location     string
-	Furnished    bool
-	YearBuilt    int
-	Photos       []string
-	Tags         []string
-	ForSale      bool
-	ForRent      bool
+	ID             string
+	Code           string
+	Type           string
+	Name           string
+	NormalizedName string
+	Description    string
+	Url            string
+	Price          int
+	Bedrooms       int
+	Bathrooms      int
+	Area           int
+	GarageSpaces   int
+	City           string
+	District       string
+	Furnished      bool
+	YearBuilt      int
+	Photos         []string
+	Tags           []string
+	ForSale        bool
+	ForRent        bool
 }
 
 func (r *RealEstate) SetCode(text string) error {
@@ -127,8 +130,13 @@ func (r *RealEstate) SetGarageSpaces(text string) error {
 	return nil
 }
 
-func (r *RealEstate) SetLocation(text string) error {
-	r.Location = strings.TrimSpace(strings.ReplaceAll(text, "/\t", ""))
+func (r *RealEstate) SetDistrict(text string) error {
+	r.District = strings.TrimSpace(strings.ReplaceAll(text, "/\t", ""))
+	return nil
+}
+
+func (r *RealEstate) SetCity(text string) error {
+	r.City = strings.TrimSpace(strings.ReplaceAll(text, "/\t", ""))
 	return nil
 }
 
@@ -163,49 +171,123 @@ func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) e
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		query := `
-			CREATE (r:RealEstate {
-				id: $id,
-				code: $code,
-				type: $type,
-				name: $name,
-				description: $description,
-				url: $url,
-				price: $price,
-				bedrooms: $bedrooms,
-				bathrooms: $bathrooms,
-				area: $area,
-				garageSpaces: $garageSpaces,
-				location: $location,
-				furnished: $furnished,
-				yearBuilt: $yearBuilt,
-				photos: $photos,
-				tags: $tags,
-				forSale: $forSale,
-				forRent: $forRent
-			})
+		labels := []string{"RealEstate"}
+
+		if r.Type != "" {
+			labels = append(labels, r.Type)
+		}
+		if r.ForSale {
+			labels = append(labels, "ForSale")
+		}
+		if r.ForRent {
+			labels = append(labels, "ForRent")
+		}
+
+		labelString := fmt.Sprintf("SET r:%s", strings.Join(labels, ":"))
+
+		query := fmt.Sprintf(`
+			MERGE (r:RealEstate {code: $code})	
+			ON CREATE SET
+					r.id = randomUUID(),
+					r.type = $type,
+					r.name = $name,
+					r.description = $description,
+					r.url = $url,
+					r.bedrooms = $bedrooms,
+					r.bathrooms = $bathrooms,
+					r.area = $area,
+					r.garageSpaces = $garageSpaces,
+					r.furnished = $furnished,
+					r.yearBuilt = $yearBuilt,
+					r.photos = $photos,
+					r.tags = $tags,
+					r.forSale = $forSale,
+					r.forRent = $forRent,
+					r.createdAt = datetime(),
+					r.updatedAt = datetime()
+			ON MATCH SET
+					r.type = $type,
+					r.name = $name,
+					r.description = $description,
+					r.url = $url,
+					r.bedrooms = $bedrooms,
+					r.bathrooms = $bathrooms,
+					r.area = $area,
+					r.garageSpaces = $garageSpaces,
+					r.furnished = $furnished,
+					r.yearBuilt = $yearBuilt,
+					r.photos = $photos,
+					r.tags = $tags,
+					r.forSale = $forSale,
+					r.forRent = $forRent,
+					r.updatedAt = datetime()
+			%s
+			WITH r
+			CALL {
+				WITH r
+				WITH r AS r2
+				OPTIONAL MATCH (r2)-[old:LATEST_PRICE]->(oldPrice:Price)
+				DELETE old
+
+				WITH r2, oldPrice
+				CREATE (newPrice:Price {
+					id: randomUUID(),
+					value: $price,
+					createdAt: datetime()
+				})
+				CREATE (r2)-[:LATEST_PRICE]->(newPrice)
+				FOREACH (_ IN CASE WHEN oldPrice IS NOT NULL THEN [1] ELSE [] END |
+					CREATE (newPrice)<-[:NEXT]-(oldPrice)
+				)
+				WITH r2, newPrice
+				OPTIONAL MATCH (r2)-[:FIRST_PRICE]->(p:Price)
+				WITH r2, newPrice, COUNT(p) AS existingFirst
+				WHERE existingFirst = 0
+				CREATE (r2)-[:FIRST_PRICE]->(newPrice)
+			}
+			MERGE (e:Estate {name: "Rio Grande do Sul"})
+			WITH r, e
+			MERGE (c:City {normalizedName: $normalizedCityName})
+			ON CREATE SET
+					c.id = randomUUID(),
+					c.name = $city,
+					c.normalizedName = $normalizedCityName
+			WITH r, e, c
+			MERGE (c)-[:IN]->(e)
+			MERGE (r)-[:IN]->(c)
+			WITH r, c
+			WHERE NOT $district = "" AND $district IS NOT NULL 
+			MERGE (d:District {name: $district})
+			ON CREATE SET
+					d.id = randomUUID(),
+					d.name = $district
+			WITH r, d, c
+			MERGE (d)-[:IN]->(c)
+			WITH r, d
+			CREATE (r)-[:IN]->(d)	
 			RETURN r
-		`
+		`, labelString)
 
 		_, err := tx.Run(ctx, query, map[string]any{
-			"id":           r.ID,
-			"code":         r.Code,
-			"type":         r.Type,
-			"name":         r.Name,
-			"description":  r.Description,
-			"url":          r.Url,
-			"price":        r.Price,
-			"bedrooms":     r.Bedrooms,
-			"bathrooms":    r.Bathrooms,
-			"area":         r.Area,
-			"garageSpaces": r.GarageSpaces,
-			"location":     r.Location,
-			"furnished":    r.Furnished,
-			"yearBuilt":    r.YearBuilt,
-			"photos":       r.Photos,
-			"tags":         r.Tags,
-			"forSale":      r.ForSale,
-			"forRent":      r.ForRent,
+			"code":               r.Code,
+			"type":               r.Type,
+			"name":               r.Name,
+			"description":        r.Description,
+			"url":                r.Url,
+			"price":              r.Price,
+			"bedrooms":           r.Bedrooms,
+			"bathrooms":          r.Bathrooms,
+			"area":               r.Area,
+			"city":               r.City,
+			"normalizedCityName": utils.NormalizeCityName(r.City),
+			"district":           r.District,
+			"garageSpaces":       r.GarageSpaces,
+			"furnished":          r.Furnished,
+			"yearBuilt":          r.YearBuilt,
+			"photos":             r.Photos,
+			"tags":               r.Tags,
+			"forSale":            r.ForSale,
+			"forRent":            r.ForRent,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute query: %w", err)

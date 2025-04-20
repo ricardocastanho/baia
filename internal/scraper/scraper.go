@@ -64,7 +64,7 @@ func (s *Scraper) getRealEstate(ctx context.Context) {
 					job.scraper.GetRealEstate(ctx, s.ch, &realEstate)
 					s.scrapedUrls[url] = true
 				}(url)
-				time.Sleep(time.Second * 2) // todo remover
+				time.Sleep(time.Second * 5) // !TODO remover
 			}
 		}
 	}()

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"regexp"
+	"strings"
 
 	"github.com/gocolly/colly/v2"
 )
@@ -75,7 +76,8 @@ func (p *PerfilScraper) GetRealEstate(ctx context.Context, ch chan contracts.Rea
 	p.SetRealEstateBathrooms(ctx, c, re)
 	p.SetRealEstateArea(ctx, c, re)
 	p.SetRealEstateGarageSpaces(ctx, c, re)
-	p.SetRealEstateLocation(ctx, c, re)
+	p.SetRealEstateDistrict(ctx, c, re)
+	p.SetRealEstateCity(ctx, c, re)
 	p.SetRealEstateFurnished(ctx, c, re)
 	p.SetRealEstateYearBuilt(ctx, c, re)
 	p.SetRealEstatePhotos(ctx, c, re)
@@ -205,7 +207,10 @@ func (p *PerfilScraper) SetRealEstateGarageSpaces(ctx context.Context, c *colly.
 	})
 }
 
-func (p *PerfilScraper) SetRealEstateLocation(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+func (p *PerfilScraper) SetRealEstateDistrict(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
+}
+
+func (p *PerfilScraper) SetRealEstateCity(ctx context.Context, c *colly.Collector, r *contracts.RealEstate) {
 	c.OnHTML("div.property-title span a span[data-tag='address']", func(e *colly.HTMLElement) {
 		select {
 		case <-ctx.Done():
@@ -218,7 +223,7 @@ func (p *PerfilScraper) SetRealEstateLocation(ctx context.Context, c *colly.Coll
 
 			i.Remove()
 
-			r.SetLocation(span.Text())
+			r.SetCity(strings.Split(span.Text(), " / ")[0])
 		}
 	})
 }
