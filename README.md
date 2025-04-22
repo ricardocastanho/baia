@@ -51,3 +51,7 @@ Welcome to the Real Estate Search Platform, a Go-based project designed to simpl
    ```sh
    go run main.go
    ```
+
+### Neo4j Graph Database Model
+
+![image](https://github.com/user-attachments/assets/afa1fb82-8731-428f-afd9-e2d3f435dde9)
