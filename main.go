@@ -25,9 +25,13 @@ func main() {
 		log.Fatalf("Erro ao carregar o arquivo .env: %v", err)
 	}
 
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 	uri := os.Getenv("NEO4J_URI")
 	username := os.Getenv("NEO4J_USERNAME")
 	password := os.Getenv("NEO4J_PASSWORD")
+
+	logger.Info("Baia Scraper", "uri", uri, "username", username)
 
 	if uri == "" || username == "" || password == "" {
 		log.Fatal("Wrong Neo4j credentials in .env")
@@ -44,8 +48,6 @@ func main() {
 	if err := driver.VerifyConnectivity(context.Background()); err != nil {
 		log.Fatalf("Neo4j connection failed: %v", err)
 	}
-
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	perfilScraper := perfil.NewPerfilScraper(logger)
 
