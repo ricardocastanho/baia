@@ -51,19 +51,45 @@ func main() {
 
 	perfilScraper := perfil.NewPerfilScraper(logger)
 
-	strategy := []scrapify.ScraperStrategy[contracts.RealEstate]{
-		{
-			Scraper: perfilScraper,
-			Url:     "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/&pg=1",
-		},
-	}
+	strategies := make([]scrapify.ScraperStrategy[contracts.RealEstate], 0)
+
+	strategies = append(strategies, scrapify.ScraperStrategy[contracts.RealEstate]{
+		Scraper: perfilScraper,
+		Url:     "https://www.imobiliariaperfil.imb.br/comprar-imoveis/apartamentos-santo-angelo/&pg=1",
+	},
+	)
+	strategies = append(strategies, scrapify.ScraperStrategy[contracts.RealEstate]{
+		Scraper: perfilScraper,
+		Url:     "https://www.imobiliariaperfil.imb.br/comprar-imoveis/casas-santo-angelo/&pg=1",
+	},
+	)
+	strategies = append(strategies, scrapify.ScraperStrategy[contracts.RealEstate]{
+		Scraper: perfilScraper,
+		Url:     "https://www.imobiliariaperfil.imb.br/comprar-imoveis/terrenos-santo-angelo/&pg=1",
+	},
+	)
+	strategies = append(strategies, scrapify.ScraperStrategy[contracts.RealEstate]{
+		Scraper: perfilScraper,
+		Url:     "https://www.imobiliariaperfil.imb.br/alugar-imoveis/apartamentos-santo-angelo/&pg=1",
+	},
+	)
+	strategies = append(strategies, scrapify.ScraperStrategy[contracts.RealEstate]{
+		Scraper: perfilScraper,
+		Url:     "https://www.imobiliariaperfil.imb.br/alugar-imoveis/casas-santo-angelo/&pg=1",
+	},
+	)
+	strategies = append(strategies, scrapify.ScraperStrategy[contracts.RealEstate]{
+		Scraper: perfilScraper,
+		Url:     "https://www.imobiliariaperfil.imb.br/alugar-imoveis/terrenos-santo-angelo/&pg=1",
+	},
+	)
 
 	callback := func(data contracts.RealEstate) {
 		logger.Info("Saving data in database:", "data", data)
 		data.Save(ctx, driver)
 	}
 
-	scraper := scrapify.NewScraper(strategy, callback, time.Second*2)
+	scraper := scrapify.NewScraper(strategies, callback, time.Second*2)
 	scraper.Run(ctx)
 
 	logger.Info("Scraping completed.")
