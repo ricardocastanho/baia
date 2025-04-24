@@ -93,6 +93,21 @@ func (p *PerfilScraper) GetData(ctx context.Context, ch chan<- contracts.RealEst
 		p.logger.Debug(fmt.Sprint("Stopping visit due to context cancellation:", ctx.Err()))
 	default:
 		re.Url = url
+
+		if strings.Contains(url, "alugar") {
+			re.ForRent = true
+		} else {
+			re.ForSale = true
+		}
+
+		if strings.Contains(url, "apartamento") {
+			re.Type = contracts.Apartment
+		} else if strings.Contains(url, "casas") {
+			re.Type = contracts.House
+		} else if strings.Contains(url, "terreno") {
+			re.Type = contracts.Land
+		}
+
 		c.Visit(url)
 	}
 }
