@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := utils.NewCancelableContext()
+	ctx, cancel := utils.NewTimeoutContext(time.Minute * 10)
 	defer cancel()
 
 	err := godotenv.Load()
