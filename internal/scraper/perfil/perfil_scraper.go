@@ -92,6 +92,7 @@ func (p *PerfilScraper) GetData(ctx context.Context, ch chan<- contracts.RealEst
 	case <-ctx.Done():
 		p.logger.Debug(fmt.Sprint("Stopping visit due to context cancellation:", ctx.Err()))
 	default:
+		re.Url = url
 		c.Visit(url)
 	}
 }
