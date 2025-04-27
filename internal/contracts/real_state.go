@@ -38,6 +38,7 @@ type RealEstate struct {
 	YearBuilt      int
 	Photos         []string
 	Tags           []string
+	Agency         string
 	ForSale        bool
 	ForRent        bool
 }
@@ -171,19 +172,23 @@ func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) e
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		labels := []string{"RealEstate"}
+		realEstateLabels := []string{"RealEstate"}
+		priceLabels := []string{"Price"}
 
 		if r.Type != "" {
-			labels = append(labels, r.Type)
+			realEstateLabels = append(realEstateLabels, r.Type)
 		}
 		if r.ForSale {
-			labels = append(labels, "ForSale")
+			realEstateLabels = append(realEstateLabels, "ForSale")
+			priceLabels = append(priceLabels, "SalePrice")
 		}
 		if r.ForRent {
-			labels = append(labels, "ForRent")
+			realEstateLabels = append(realEstateLabels, "ForRent")
+			priceLabels = append(priceLabels, "RentalPrice")
 		}
 
-		labelString := fmt.Sprintf("SET r:%s", strings.Join(labels, ":"))
+		realEstateLabelString := fmt.Sprintf("SET r:%s", strings.Join(realEstateLabels, ":"))
+		priceLabelString := strings.Join(priceLabels, ":")
 
 		query := fmt.Sprintf(`
 			MERGE (r:RealEstate {code: $code})	
@@ -226,12 +231,12 @@ func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) e
 			CALL {
 				WITH r
 				WITH r AS r2
-				OPTIONAL MATCH (r2)-[old:LATEST_PRICE]->(oldPrice:Price)
+				OPTIONAL MATCH (r2)-[old:LATEST_PRICE]->(oldPrice:%s)
 				WHERE NOT oldPrice.value = $price 
 				DELETE old
 
 				WITH r2, oldPrice
-				CREATE (newPrice:Price {
+				CREATE (newPrice:%s {
 					id: randomUUID(),
 					value: $price,
 					createdAt: datetime()
@@ -241,11 +246,18 @@ func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) e
 					CREATE (newPrice)<-[:NEXT]-(oldPrice)
 				)
 				WITH r2, newPrice
-				OPTIONAL MATCH (r2)-[:FIRST_PRICE]->(p:Price)
+				OPTIONAL MATCH (r2)-[:FIRST_PRICE]->(p:%s)
 				WITH r2, newPrice, COUNT(p) AS existingFirst
 				WHERE existingFirst = 0
 				CREATE (r2)-[:FIRST_PRICE]->(newPrice)
 			}
+			MERGE (a:Agency {normalizedName: $normalizedAgencyName})
+			ON CREATE SET
+					a.id = randomUUID(),
+					a.name = $agency,
+					a.normalizedName = $normalizedAgencyName
+			MERGE (r)-[:SELLED_BY]->(a)
+			WITH r
 			MERGE (e:Estate {name: "Rio Grande do Sul"})
 			WITH r, e
 			MERGE (c:City {normalizedName: $normalizedCityName})
@@ -267,28 +279,30 @@ func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) e
 			WITH r, d
 			CREATE (r)-[:IN]->(d)	
 			RETURN r
-		`, labelString)
+		`, realEstateLabelString, priceLabelString, priceLabelString, priceLabelString)
 
 		_, err := tx.Run(ctx, query, map[string]any{
-			"code":               r.Code,
-			"type":               r.Type,
-			"name":               r.Name,
-			"description":        r.Description,
-			"url":                r.Url,
-			"price":              r.Price,
-			"bedrooms":           r.Bedrooms,
-			"bathrooms":          r.Bathrooms,
-			"area":               r.Area,
-			"city":               r.City,
-			"normalizedCityName": utils.NormalizeCityName(r.City),
-			"district":           r.District,
-			"garageSpaces":       r.GarageSpaces,
-			"furnished":          r.Furnished,
-			"yearBuilt":          r.YearBuilt,
-			"photos":             r.Photos,
-			"tags":               r.Tags,
-			"forSale":            r.ForSale,
-			"forRent":            r.ForRent,
+			"code":                 r.Code,
+			"type":                 r.Type,
+			"name":                 r.Name,
+			"description":          r.Description,
+			"url":                  r.Url,
+			"price":                r.Price,
+			"bedrooms":             r.Bedrooms,
+			"bathrooms":            r.Bathrooms,
+			"area":                 r.Area,
+			"city":                 r.City,
+			"normalizedCityName":   utils.NormalizeCityName(r.City),
+			"agency":               r.Agency,
+			"normalizedAgencyName": utils.NormalizeCityName(r.Agency),
+			"district":             r.District,
+			"garageSpaces":         r.GarageSpaces,
+			"furnished":            r.Furnished,
+			"yearBuilt":            r.YearBuilt,
+			"photos":               r.Photos,
+			"tags":                 r.Tags,
+			"forSale":              r.ForSale,
+			"forRent":              r.ForRent,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute query: %w", err)

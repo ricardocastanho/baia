@@ -93,6 +93,7 @@ func (p *PerfilScraper) GetData(ctx context.Context, ch chan<- contracts.RealEst
 		p.logger.Debug(fmt.Sprint("Stopping visit due to context cancellation:", ctx.Err()))
 	default:
 		re.Url = url
+		re.Agency = "Perfil"
 
 		if strings.Contains(url, "alugar") || strings.Contains(url, "locacao") {
 			re.ForRent = true
