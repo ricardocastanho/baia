@@ -44,14 +44,7 @@ type RealEstate struct {
 }
 
 func (r *RealEstate) SetCode(text string) error {
-	if !strings.Contains(text, "Cód. V") {
-		return errors.New("invalid format: keywork 'Cód. V' is missing")
-	}
-
-	code := strings.TrimSpace(strings.Replace(text, "Cód. V", "", 1))
-
-	r.Code = code
-
+	r.Code = text
 	return nil
 }
 
@@ -231,24 +224,28 @@ func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) e
 			CALL {
 				WITH r
 				WITH r AS r2
-				OPTIONAL MATCH (r2)-[old:LATEST_PRICE]->(oldPrice:%s)
+				OPTIONAL MATCH (r2)-[oldRel:LATEST_PRICE]->(oldPrice:%s)
 				WHERE oldPrice IS NULL OR oldPrice.value <> $price
-				DELETE old
-				WITH r2, oldPrice
-				CREATE (newPrice:%s {
-					id: randomUUID(),
-					value: $price,
-					createdAt: datetime()
-				})
-				CREATE (r2)-[:LATEST_PRICE]->(newPrice)
-				FOREACH (_ IN CASE WHEN oldPrice IS NOT NULL THEN [1] ELSE [] END |
-					CREATE (newPrice)<-[:NEXT]-(oldPrice)
-				)
-				WITH r2, newPrice
-				OPTIONAL MATCH (r2)-[:FIRST_PRICE]->(p:%s)
-				WITH r2, newPrice, COUNT(p) AS existingFirst
-				WHERE existingFirst = 0
-				CREATE (r2)-[:FIRST_PRICE]->(newPrice)
+		
+				CALL {
+					WITH r2, oldRel, oldPrice
+					DELETE oldRel
+					WITH r2, oldPrice
+					CREATE (newPrice:%s {
+						id: randomUUID(),
+						value: $price,
+						createdAt: datetime()
+					})
+					CREATE (r2)-[:LATEST_PRICE]->(newPrice)
+					FOREACH (_ IN CASE WHEN oldPrice IS NOT NULL THEN [1] ELSE [] END |
+						CREATE (newPrice)<-[:NEXT]-(oldPrice)
+					)
+					WITH r2, newPrice
+					OPTIONAL MATCH (r2)-[:FIRST_PRICE]->(p:%s)
+					WITH r2, newPrice, COUNT(p) AS existingFirst
+					WHERE existingFirst = 0
+					CREATE (r2)-[:FIRST_PRICE]->(newPrice)
+				}
 			}
 			MERGE (a:Agency {normalizedName: $normalizedAgencyName})
 			ON CREATE SET
@@ -257,7 +254,7 @@ func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) e
 					a.normalizedName = $normalizedAgencyName
 			MERGE (r)-[:SELLED_BY]->(a)
 			WITH r
-			MERGE (e:Estate {name: "Rio Grande do Sul"})
+			MERGE (e:Estate {name: "Rio Grande do Sul", normalizedName: "riograndedosul"})
 			WITH r, e
 			MERGE (c:City {normalizedName: $normalizedCityName})
 			ON CREATE SET

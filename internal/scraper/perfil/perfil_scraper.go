@@ -120,7 +120,8 @@ func (p *PerfilScraper) SetRealEstateCode(ctx context.Context, c *colly.Collecto
 			p.logger.Debug(fmt.Sprint("Stopping collection due to context cancellation:", ctx.Err()))
 			return
 		default:
-			r.SetCode(e.Text)
+			code := strings.TrimSpace(strings.Replace(e.Text, "Cód.", "", 1))
+			r.SetCode(code)
 		}
 	})
 }
