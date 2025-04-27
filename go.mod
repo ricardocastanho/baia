@@ -8,7 +8,7 @@ require (
 	github.com/gocolly/colly/v2 v2.1.0
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.24.0
-	github.com/ricardocastanho/scrapify v0.0.1
+	github.com/ricardocastanho/scrapify v0.1.0
 	golang.org/x/text v0.3.2
 )
 
