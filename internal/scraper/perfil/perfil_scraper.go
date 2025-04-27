@@ -94,7 +94,7 @@ func (p *PerfilScraper) GetData(ctx context.Context, ch chan<- contracts.RealEst
 	default:
 		re.Url = url
 
-		if strings.Contains(url, "alugar") {
+		if strings.Contains(url, "alugar") || strings.Contains(url, "locacao") {
 			re.ForRent = true
 		} else {
 			re.ForSale = true
@@ -102,7 +102,7 @@ func (p *PerfilScraper) GetData(ctx context.Context, ch chan<- contracts.RealEst
 
 		if strings.Contains(url, "apartamento") {
 			re.Type = contracts.Apartment
-		} else if strings.Contains(url, "casas") {
+		} else if strings.Contains(url, "casa") {
 			re.Type = contracts.House
 		} else if strings.Contains(url, "terreno") {
 			re.Type = contracts.Land
