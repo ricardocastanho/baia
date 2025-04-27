@@ -232,9 +232,8 @@ func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) e
 				WITH r
 				WITH r AS r2
 				OPTIONAL MATCH (r2)-[old:LATEST_PRICE]->(oldPrice:%s)
-				WHERE NOT oldPrice.value = $price 
+				WHERE oldPrice IS NULL OR oldPrice.value <> $price
 				DELETE old
-
 				WITH r2, oldPrice
 				CREATE (newPrice:%s {
 					id: randomUUID(),
