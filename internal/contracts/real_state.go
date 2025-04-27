@@ -227,6 +227,7 @@ func (r *RealEstate) Save(ctx context.Context, driver neo4j.DriverWithContext) e
 				WITH r
 				WITH r AS r2
 				OPTIONAL MATCH (r2)-[old:LATEST_PRICE]->(oldPrice:Price)
+				WHERE NOT oldPrice.value = $price 
 				DELETE old
 
 				WITH r2, oldPrice
